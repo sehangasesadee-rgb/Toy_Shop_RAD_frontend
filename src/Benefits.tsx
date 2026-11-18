@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import './App.css';
 
@@ -32,14 +31,14 @@ const Benefits = () => {
         <strong>→</strong>
       </Link>
 
-      <Link to="/offers" className="benefit-card offers">
+      {/* <Link to="/offers" className="benefit-card offers">
         <span>♧</span>
         <div>
           <b>Daily Offers</b>
           <small>Deals you will love</small>
         </div>
         <strong>→</strong>
-      </Link>
+      </Link> */}
     </section>
   );
 };

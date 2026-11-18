@@ -1,119 +1,179 @@
-
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './App.css';
 
-const toys = [
-  {
-    name: 'Cute Teddy Bear',
-    category: 'Soft Toys',
-    image: 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=600',
-    price: 15.99,
-    oldPrice: 19.99,
-    discount: '20% OFF',
-    rating: '4.8',
-  },
-  {
-    name: 'Baby Racing Car',
-    category: 'Vehicles',
-    image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=600',
-    price: 12.74,
-    oldPrice: 14.99,
-    discount: '15% OFF',
-    rating: '4.6',
-  },
-  {
-    name: 'Princess Doll',
-    category: 'Dolls',
-    image: 'https://images.unsplash.com/photo-1560961911-ba7ef651a56c?w=600',
-    price: 11.24,
-    oldPrice: 14.99,
-    discount: '25% OFF',
-    rating: '4.7',
-  },
-];
+const API_URL = 'http://localhost:5000/api';
+const IMAGE_URL = 'http://localhost:5000';
 
-const categories = [
-  { name: 'Toys', emoji: '🧸' },
-  { name: 'Vehicles', emoji: '🚗' },
-  { name: 'Dolls', emoji: '👧' },
-  { name: 'Building Blocks', emoji: '🧱' },
-  { name: 'Puzzles', emoji: '🧩' },
-  { name: 'Games', emoji: '🎮' },
-  { name: 'Educational', emoji: '📚' },
-  { name: 'Sports', emoji: '⚽' },
-];
+interface Season {
+  _id: string;
+  name: string;
+  description: string;
+  bannerImage: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+}
 
-function FlashSale() {
+const getImageUrl = (image?: string) => {
+  if (!image || !image.trim()) {
+    return '/placeholder.png';
+  }
+
+  const value = image.trim().replace(/\\/g, '/');
+
+  if (
+    value.startsWith('http://') ||
+    value.startsWith('https://') ||
+    value.startsWith('data:') ||
+    value.startsWith('blob:')
+  ) {
+    return value;
+  }
+
+  return `${IMAGE_URL}/${value.replace(/^\/+/, '')}`;
+};
+
+const FlashSale: React.FC = () => {
+  const navigate = useNavigate();
+
+  const [activeSeasons, setActiveSeasons] = useState<Season[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchActiveSeasons = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const response = await fetch(`${API_URL}/seasons/active`);
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.message || 'Unable to load special seasons.'
+          );
+        }
+
+        setActiveSeasons(result.data || []);
+      } catch (err) {
+        console.error('Active Seasons Error:', err);
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Unable to load special events.'
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActiveSeasons();
+  }, []);
+
+  const openSeason = (seasonId: string) => {
+    navigate(`/season/${seasonId}`);
+  };
+
   return (
     <main className="flash-page">
+
       <div className="flash-heading">
         <div>
-          <span className="flash-eyebrow">DON'T MISS OUT</span>
-          <h1>Flash Sale <span>✧</span></h1>
+          <span className="flash-eyebrow">
+            DON'T MISS OUT
+          </span>
+
+          <h1>
+            Flash Sale <span>✧</span>
+          </h1>
         </div>
 
-        <div className="flash-offer">
-          <span className="timer-icon">◷</span>
-          <div>
-            <small>SPECIAL OFFERS</small>
-            <h3>LIMITED TIME</h3>
-            <p>Grab your favourite toys!</p>
-          </div>
-        </div>
+       
       </div>
 
-      <section className="flash-grid">
-        {toys.map((toy) => (
-          <article className="flash-card" key={toy.name}>
-            <div className="flash-picture">
-              <img src={toy.image} alt={toy.name} />
-              <span className="flash-discount">{toy.discount}</span>
-              <button className="flash-heart" aria-label="Add to favorites">
-                ♡
-              </button>
-            </div>
+      {loading && (
+        <div className="flash-empty">
+          <span>🧸</span>
+          <h2>Loading Special Events...</h2>
+          <p>Please wait a little! ❤️</p>
+        </div>
+      )}
 
-            <div className="flash-info">
-              <span className="flash-category">{toy.category}</span>
-              <h2>{toy.name}</h2>
+      {!loading && error && (
+        <div className="flash-empty">
+          <span>🎁</span>
+          <h2>Oops! Something went wrong.</h2>
+          <p>{error}</p>
+        </div>
+      )}
 
-              <div className="flash-prices">
-                <strong>Rs.{toy.price.toFixed(2)}</strong>
-                <del>Rs.{toy.oldPrice.toFixed(2)}</del>
+      {!loading && !error && activeSeasons.length === 0 && (
+        <div className="flash-empty">
+          <span>🎀</span>
+          <h2>No Special Events Available</h2>
+          <p>
+            New exciting toy offers are coming soon!
+            Please check back again. ❤️
+          </p>
+        </div>
+      )}
+
+      {!loading && !error && activeSeasons.length > 0 && (
+        <section className="flash-season-list">
+
+          {activeSeasons.map((season) => (
+            <div
+              className="flash-season-banner"
+              key={season._id}
+              onClick={() => openSeason(season._id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'Enter' ||
+                  event.key === ' '
+                ) {
+                  event.preventDefault();
+                  openSeason(season._id);
+                }
+              }}
+              aria-label={`Explore ${season.name}`}
+            >
+
+              <img
+                src={getImageUrl(season.bannerImage)}
+                alt={season.name}
+                onError={(event) => {
+                  event.currentTarget.src = '/placeholder.png';
+                }}
+              />
+
+              <div className="flash-season-banner-text">
+
+                <span className="flash-season-eyebrow">
+                  ✨ TOOTIETOYS SPECIAL EVENT ✨
+                </span>
+
+                <h2>{season.name}</h2>
+
+                <p>{season.description}</p>
+
+                <span className="flash-season-explore">
+                  Explore Now →
+                </span>
+
               </div>
-
-              <p className="flash-rating">
-                ⭐ {toy.rating} <span>Customer rating</span>
-              </p>
-
-              <button className="flash-cart">
-                🛒 Add to Cart
-              </button>
-
-              <button className="flash-compare">
-                ⇄ Compare
-              </button>
             </div>
-          </article>
-        ))}
-      </section>
-
-      <section className="popular-categories">
-        <div className="popular-heading">
-          <h2>Popular Categories</h2>
-          <button>View all →</button>
-        </div>
-
-        <div className="popular-grid">
-          {categories.map((category) => (
-            <button className="popular-item" key={category.name}>
-              <span>{category.emoji}</span>
-              <small>{category.name}</small>
-            </button>
           ))}
-        </div>
-      </section>
+
+        </section>
+      )}
+
     </main>
   );
-}
+};
 
 export default FlashSale;

@@ -1,109 +1,75 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
+import { useNavigate , useSearchParams} from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts} from "./redux/productSlice";
+import type { RootState, AppDispatch } from "./redux/store";
+// import { addToCart } from "./redux/cartSlice";
 
-interface Toy {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  oldPrice: number;
-  image: string;
-  rating: number;
-  badge?: string;
-}
 
-const toys: Toy[] = [
-  {
-    id: 1,
-    name: "Cute Teddy Bear",
-    category: "Soft Toys",
-    price: 2500,
-    oldPrice: 3000,
-    image: "/toy_img1.png",
-    rating: 4.8,
-    badge: "Bestseller",
-  },
-  {
-    id: 2,
-    name: "Little Toy Car",
-    category: "Toy Vehicles",
-    price: 1800,
-    oldPrice: 2200,
-    image: "/toy_img2.png",
-    rating: 4.7,
-    badge: "Popular",
-  },
-  {
-    id: 3,
-    name: "Sweet Bunny Doll",
-    category: "Dolls",
-    price: 3200,
-    oldPrice: 3800,
-    image: "/toy_img3.jpg",
-    rating: 4.9,
-    badge: "New",
-  },
-  {
-    id: 4,
-    name: "Happy Teddy",
-    category: "Soft Toys",
-    price: 2800,
-    oldPrice: 3300,
-    image: "/toy_img1.png",
-    rating: 4.8,
-  },
-  {
-    id: 5,
-    name: "Colorful Toy Car",
-    category: "Toy Vehicles",
-    price: 2100,
-    oldPrice: 2500,
-    image: "/toy_img2.png",
-    rating: 4.6,
-  },
-  {
-    id: 6,
-    name: "Lovely Bunny",
-    category: "Soft Toys",
-    price: 3000,
-    oldPrice: 3500,
-    image: "/toy_img3.jpg",
-    rating: 4.9,
-  },
-];
 
-const categories = [
-  "All Toys",
-  "Soft Toys",
-  "Toy Vehicles",
-  "Dolls",
-];
 
 const Products: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState("All Toys");
-  const [search, setSearch] = useState("");
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { toys, loading, error } = useSelector(
+    (state: RootState) => state.products
+  );
+
+  const [selectedCategory, setSelectedCategory] = useState("All Toys");  
+  const [favorites, setFavorites] = useState<string[]>(() => {
+  const savedFavorites = localStorage.getItem("tootieFavorites");
+  return savedFavorites ? JSON.parse(savedFavorites) : [];
+});
   const [sort, setSort] = useState("default");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const ageRange = searchParams.get("ageRange");
+    const [search, setSearch] = useState(
+    searchParams.get("search") || ""
+  );
+
+
+  const categories = [
+    "All Toys",
+    ...new Set(toys.map((toy) => toy.category)),
+  ];
+
+
+useEffect(() => {
+  dispatch(fetchProducts(ageRange || undefined));
+}, [dispatch, ageRange]);
+    
+useEffect(() => {
+  localStorage.setItem("tootieFavorites", JSON.stringify(favorites));
+}, [favorites]);
+
 
   let filteredToys = toys.filter((toy) => {
     const matchesCategory =
       selectedCategory === "All Toys" ||
       toy.category === selectedCategory;
 
-    const matchesSearch = toy.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchesSearch =
+    toy.name.toLowerCase().includes(search.toLowerCase()) ||
+    toy.category.toLowerCase().includes(search.toLowerCase());
 
     return matchesCategory && matchesSearch;
   });
 
+
   if (sort === "low") {
-    filteredToys = [...filteredToys].sort((a, b) => a.price - b.price);
+    filteredToys = [...filteredToys].sort(
+      (a, b) => a.price - b.price
+    );
   } else if (sort === "high") {
-    filteredToys = [...filteredToys].sort((a, b) => b.price - a.price);
+    filteredToys = [...filteredToys].sort(
+      (a, b) => b.price - a.price
+    );
   }
 
-  const toggleFavorite = (id: number) => {
+
+  const toggleFavorite = (id: string) => {
     setFavorites((prev) =>
       prev.includes(id)
         ? prev.filter((item) => item !== id)
@@ -112,18 +78,36 @@ const Products: React.FC = () => {
   };
 
   return (
-    <div className="products-page">
+  <div className="products-page">
 
-      {/* Products Section */}
-      <section className="all-products-section">
+    <button
+      className="back-button"
+      onClick={() =>
+        navigate("/", {
+         replace: true,
+         state: { scrollToTrending: true },
+        })
+      }
+    >
+      ← Back to Home
+    </button>
 
+    <section className="all-products-section">
+
+      
         <div className="products-heading">
           <div>
             <span className="products-small-title">
               OUR COLLECTION
             </span>
-            <h2>All Toys <span>♡</span></h2>
-            <p>Find the perfect toy for every happy moment.</p>
+
+            <h2>
+              All Toys <span>♡</span>
+            </h2>
+
+            <p>
+              Find the perfect toy for every happy moment.
+            </p>
           </div>
 
           <div className="products-count">
@@ -131,11 +115,11 @@ const Products: React.FC = () => {
           </div>
         </div>
 
-        {/* Search and Sort */}
         <div className="products-toolbar">
 
           <div className="product-search">
             <span>⌕</span>
+
             <input
               type="text"
               placeholder="Search your favorite toys..."
@@ -156,7 +140,6 @@ const Products: React.FC = () => {
 
         </div>
 
-        {/* Categories */}
         <div className="product-categories">
           {categories.map((category) => (
             <button
@@ -171,81 +154,103 @@ const Products: React.FC = () => {
           ))}
         </div>
 
-        {/* Product Cards */}
-        <div className="products-display-grid">
 
-          {filteredToys.length > 0 ? (
-            filteredToys.map((toy) => (
-              <article className="toy-product-card" key={toy.id}>
+        {loading && <p>Loading toys...</p>}
 
-                <div className="toy-product-image">
 
-                  {toy.badge && (
-                    <span className="toy-product-badge">
-                      {toy.badge}
+        {!loading && error && <p>{error}</p>}
+
+        {!loading && !error && (
+          <div className="products-display-grid">
+
+            {filteredToys.length > 0 ? (
+              filteredToys.map((toy) => (
+                <article
+                  className="toy-product-card"
+                  key={toy._id}
+                >
+                  <div className="toy-product-image">
+
+                    {toy.badge && (
+                      <span className="toy-product-badge">
+                        {toy.badge}
+                      </span>
+                    )}
+
+                    <button
+                      className={`toy-favorite ${
+                        favorites.includes(toy._id)
+                          ? "selected"
+                          : ""
+                      }`}
+                      onClick={() => toggleFavorite(toy._id)}
+                      aria-label="Add to favorites"
+                    >
+                      {favorites.includes(toy._id)
+                        ? "♥"
+                        : "♡"}
+                    </button>
+
+                    <img
+                      src={toy.image}
+                      alt={toy.name}
+                    />
+
+                  </div>
+
+                  <div className="toy-product-info">
+
+                    <span className="toy-product-category">
+                      {toy.category}
                     </span>
-                  )}
 
-                  <button
-                    className={`toy-favorite ${
-                      favorites.includes(toy.id) ? "selected" : ""
-                    }`}
-                    onClick={() => toggleFavorite(toy.id)}
-                    aria-label="Add to favorites"
-                  >
-                    {favorites.includes(toy.id) ? "♥" : "♡"}
-                  </button>
+                    <h3>{toy.name}</h3>
 
-                  <img src={toy.image} alt={toy.name} />
+                    {toy.rating && (
+                      <div className="toy-product-rating">
+                        <span>★★★★★</span>
+                        <small>{toy.rating}</small>
+                      </div>
+                    )}
 
-                </div>
+                    <div className="toy-product-price">
+  <strong>
+    Rs. {toy.price.toLocaleString()}
+  </strong>
 
-                <div className="toy-product-info">
+  {toy.discount !== undefined &&
+    toy.discount > 0 &&
+    toy.oldPrice !== undefined &&
+    toy.oldPrice > toy.price && (
+      <>
+        <del>
+          Rs. {toy.oldPrice.toLocaleString()}
+        </del>
 
-                  <span className="toy-product-category">
-                    {toy.category}
-                  </span>
+        <span className="product-discount">
+          {toy.discount}% OFF
+        </span>
+      </>
+    )}
+</div>
 
-                  <h3>{toy.name}</h3>
+                    <button className="toy-add-cart" onClick={() => navigate(`/product/${toy._id}`)}> View Toy →</button>
 
-                  <div className="toy-product-rating">
-                    <span>★★★★★</span>
-                    <small>{toy.rating}</small>
                   </div>
+                </article>
+              ))
+            ) : (
+              <div className="no-toys">
+                <span>🧸</span>
+                <h3>No toys found!</h3>
+                <p>Try searching for another toy.</p>
+              </div>
+            )}
 
-                  <div className="toy-product-price">
-                    <strong>
-                      Rs. {toy.price.toLocaleString()}
-                    </strong>
-
-                    <del>
-                      Rs. {toy.oldPrice.toLocaleString()}
-                    </del>
-                  </div>
-
-                  <button
-                    className="toy-add-cart"
-                    onClick={() => alert(`${toy.name} selected!`)}
-                  >
-                    View Toy →
-                  </button>
-
-                </div>
-
-              </article>
-            ))
-          ) : (
-            <div className="no-toys">
-              <span>🧸</span>
-              <h3>No toys found!</h3>
-              <p>Try searching for another toy.</p>
-            </div>
-          )}
-
-        </div>
+          </div>
+        )}
 
       </section>
-
     </div>
   );
 };

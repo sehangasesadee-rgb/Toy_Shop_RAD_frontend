@@ -1,43 +1,49 @@
 
+import { useNavigate } from 'react-router-dom';
 import './App.css';
 
 const ageRanges = [
   {
-    image: '/public/0-2.png',
+    image: '/0-2.png',
     label: '0–2 Years',
     description: 'Soft toys for little ones',
+    ageRange: '0-2',
   },
   {
-    image: '/public/3-5.png',
+    image: '/3-5.png',
     label: '3–5 Years',
     description: 'Cute toys and teddy bears',
+    ageRange: '3-5',
   },
   {
-    image: '/public/6-8.png',
+    image: '/6-8.png',
     label: '6–8 Years',
     description: 'Fun toys for curious kids',
+    ageRange: '6-8',
   },
   {
-    image: '/public/6-12.png',
+    image: '/6-12.png',
     label: '9–12 Years',
     description: 'Creative play and building',
+    ageRange: '9-12',
   },
   {
-    image: '/public/12+.png',
+    image: '/12+.png',
     label: '13+ Years',
     description: 'Gifts for growing teens',
+    ageRange: '13+',
   },
 ];
 
 function AgeRange() {
+  const navigate = useNavigate();
+
   return (
     <section className="age-range-section" id="age-range">
       <div className="age-range-container">
 
         <div className="age-range-heading">
-          <span className="age-range-tag">
-            SHOP BY AGE
-          </span>
+          <span className="age-range-tag">SHOP BY AGE</span>
 
           <h2>
             Find the Perfect Toy for <span>Every Age!</span>
@@ -50,7 +56,21 @@ function AgeRange() {
 
         <div className="age-range-grid">
           {ageRanges.map((age) => (
-            <div className="age-range-card" key={age.label}>
+            <div
+              className="age-range-card"
+              key={age.label}
+              onClick={() =>
+                navigate(`/products?ageRange=${encodeURIComponent(age.ageRange)}`)
+              }
+              role="link"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(`/products?ageRange=${encodeURIComponent(age.ageRange)}`);
+                }
+              }}
+            >
               <div className="age-range-image-wrapper">
                 <img
                   className="age-range-image"
@@ -62,10 +82,6 @@ function AgeRange() {
               <div className="age-range-card-content">
                 <h3>{age.label}</h3>
                 <p>{age.description}</p>
-
-                <a href="#products" className="age-range-link">
-                  Explore Toys <span>→</span>
-                </a>
               </div>
             </div>
           ))}
