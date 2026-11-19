@@ -1,13 +1,15 @@
+import { useNavigate } from 'react-router-dom';
 
-const Hero = () => {
-  const scrollToToys = () => {
-    document.getElementById('products')?.scrollIntoView({
-      behavior: 'smooth',
-    });
+
+  const Hero = () => {
+  const navigate = useNavigate();
+
+  const goToProducts = () => {
+    navigate('/products');
   };
 
   return (
-    <section className="hero" id="home">
+    <section className="hero" id="hero">
       <div className="hero-copy">
         <span className="eyebrow">
            WELCOME TO TOOTIE TOYS
@@ -24,7 +26,7 @@ const Hero = () => {
           wonderful gifts for every little dreamer.
         </p> */}
 
-        <button className="shop-now" onClick={scrollToToys}>
+        <button className="shop-now" onClick={goToProducts}>
           Shop Now <span>→</span>
         </button>
 

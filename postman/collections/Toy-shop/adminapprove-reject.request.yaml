@@ -1,0 +1,5 @@
+$kind: http-request
+name: adminapprove/reject
+url: ""
+method: GET
+order: 23000

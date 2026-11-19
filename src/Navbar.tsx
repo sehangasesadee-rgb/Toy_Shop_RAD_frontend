@@ -138,10 +138,14 @@ const updateUserStatus = () => {
 
       <div className="navbar-bottom">
         <nav>
-          <a href="#home">Home</a>
-          <a href="#categories">Categories</a>
-          <a href="#products">Toys</a>
-          <a href="#about">About Us</a>
+          <a href="#hero">Home</a>
+          <a href="/products#products" onClick={(e) => {
+            e.preventDefault();
+            navigate('/products#products');
+            }}>
+              Toys
+          </a>
+          {/* <a href="#about">About Us</a> */}
         </nav>
 
         <button

@@ -1,71 +1,124 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import "../App.css";
 
 function SecurePayment() {
   return (
-    <div className="info-page">
+    <div className="info-page payment-page">
       <Link to="/" className="info-back">
         ← Back to Home
       </Link>
 
-      <section className="info-hero payment-hero">
-        <span className="info-hero-icon">🔒</span>
-        <h1>Secure Payment</h1>
-        <p>Safe and easy shopping at TootieToys!</p>
-        <small>
-          We want you to enjoy a simple and convenient
-          checkout experience.
-        </small>
+      <section className="payment-header">
+        <div className="payment-icon">💳</div>
+
+        <span className="payment-eyebrow">
+          TOOTIETOYS • PAYMENT INFORMATION
+        </span>
+
+        <h1>Payment Information</h1>
+
+        <p>
+          Simple and convenient payment options for
+          your little one's favourite toys.
+        </p>
       </section>
 
-      <section className="info-card-grid">
-        <article className="info-card">
-          <span>💳</span>
-          <h2>Payment Methods</h2>
-          <p>
-            Choose from the payment options available
-            at checkout. You can view the available
-            methods before placing your order.
-          </p>
-        </article>
+      <section className="payment-content">
+        <div className="payment-main">
+          <span className="payment-section-label">
+            AVAILABLE PAYMENT METHODS
+          </span>
 
-        <article className="info-card">
-          <span>🔐</span>
-          <h2>Payment Safety</h2>
-          <p>
-            Always use trusted payment methods and
-            make sure you are using the official
-            TootieToys website when shopping.
-          </p>
-        </article>
+          <h2>Choose how you want to pay</h2>
 
-        <article className="info-card">
-          <span>📩</span>
-          <h2>Order Confirmation</h2>
-          <p>
-            After placing your order, check your
-            order details to confirm that your
-            purchase was submitted successfully.
-          </p>
-        </article>
-
-        <article className="info-card">
-          <span>❓</span>
-          <h2>Payment Problems?</h2>
-          <p>
-            Having trouble with a payment? Contact
-            our support team for assistance.
+          <p className="payment-description">
+            At TootieToys, we offer two convenient ways
+            to complete your purchase.
           </p>
 
-          <Link to="/support" className="info-action">
+          <div className="payment-steps">
+            <div className="payment-step">
+              <span className="payment-step-number">01</span>
+              <div>
+                <h3>💵 Cash on Delivery</h3>
+                <p>
+                  Place your order and pay the total amount
+                  in cash when your order is delivered.
+                  Our payment status will be updated after
+                  the payment is received.
+                </p>
+              </div>
+            </div>
+
+            <div className="payment-step">
+              <span className="payment-step-number">02</span>
+              <div>
+                <h3>🏦 Bank Transfer</h3>
+                <p>
+                  Transfer the order amount to our bank
+                  account and upload your payment slip
+                  during checkout. Our team will review
+                  the slip and verify your payment.
+                </p>
+              </div>
+            </div>
+
+            <div className="payment-step">
+              <span className="payment-step-number">03</span>
+              <div>
+                <h3>📦 Order Confirmation</h3>
+                <p>
+                  After placing your order, visit My Orders
+                  to check your order details and current status.
+                </p>
+              </div>
+            </div>
+
+            <div className="payment-step">
+              <span className="payment-step-number">04</span>
+              <div>
+                <h3>💗 Payment Confirmation</h3>
+                <p>
+                  Bank transfers are marked as paid after
+                  verification. Cash on Delivery payments
+                  are marked as paid after cash is collected.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside className="payment-side">
+          <div className="payment-side-icon">🔒</div>
+
+          <h3>Shop with confidence</h3>
+
+          <p>
+            Always check your order total and payment
+            method before confirming your purchase.
+          </p>
+
+          <div className="payment-side-divider"></div>
+
+          <h4>Need help with a payment?</h4>
+
+          <p>
+            If you have any questions about your payment
+            or order, our support team is here to help.
+          </p>
+
+          <Link to="/support" className="payment-support-link">
             Contact Support →
           </Link>
-        </article>
+        </aside>
       </section>
 
-      <div className="info-bottom-note">
-        💗 Thank you for shopping with TootieToys!
+      <div className="payment-bottom">
+        <span>🧸</span>
+        <p>Thank you for choosing TootieToys!</p>
+        <small>Little Toys, Big Happiness.</small>
       </div>
     </div>
   );

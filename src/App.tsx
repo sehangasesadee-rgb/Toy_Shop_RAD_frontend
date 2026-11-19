@@ -33,8 +33,8 @@ import AdminProducts from './pages/AdminProducts';
 import Favorites from "./pages/Favorites";
 import SeasonalOffers from "./pages/SeasonalOffers";
 import SeasonDetails from './pages/SeasonDetails';
-
-
+import AdminReturns from "./pages/AdminReturns";
+import AdminPayments from './pages/AdminPayments';
 
 
 function HomePage() {
@@ -68,7 +68,6 @@ function HomePage() {
   );
 }
 function App() {
-  // const [selectedBrand, setBrand] = useState("All");
 
   return (
     <BrowserRouter>
@@ -81,6 +80,7 @@ function App() {
         {/* <Route path="/offers" element={<DailyOffers />} /> */}
         <Route path='/products' element={<Products/>} />
         <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/product" element={<Products />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/order-success" element={<OrderSuccess />} />
@@ -93,7 +93,9 @@ function App() {
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/admin/seasons" element={<SeasonalOffers />} />
         <Route path="/season/:id" element={<SeasonDetails />} />
-
+        <Route path="/admin/returns" element={<AdminReturns />} />
+        <Route path="/admin/payments" element={<AdminPayments />} />
+        
 
 
 

@@ -1,9 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import PhoneInput from "react-phone-number-input";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import "../App.css";
 
 interface CartItem {
@@ -13,6 +11,8 @@ interface CartItem {
   quantity: number;
   image: string;
 }
+
+type PaymentMethod = "CASH_ON_DELIVERY" | "BANK_TRANSFER";
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -25,23 +25,19 @@ const Checkout: React.FC = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
 
+  const [paymentMethod, setPaymentMethod] =
+    useState<PaymentMethod>("CASH_ON_DELIVERY");
+
+  const [bankSlip, setBankSlip] = useState<File | null>(null);
+  const [placingOrder, setPlacingOrder] = useState(false);
+
   useEffect(() => {
     if (isBuyNow) {
       const buyNowItem = localStorage.getItem("tootieBuyNow");
-
-      if (buyNowItem) {
-        setCart([JSON.parse(buyNowItem)]);
-      } else {
-        setCart([]);
-      }
+      setCart(buyNowItem ? [JSON.parse(buyNowItem)] : []);
     } else {
       const savedCart = localStorage.getItem("tootieCart");
-
-      if (savedCart) {
-        setCart(JSON.parse(savedCart));
-      } else {
-        setCart([]);
-      }
+      setCart(savedCart ? JSON.parse(savedCart) : []);
     }
   }, [isBuyNow]);
 
@@ -50,20 +46,21 @@ const Checkout: React.FC = () => {
     0
   );
 
-  const handlePlaceOrder = async (
-    e: React.FormEvent
-  ) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!phone || !isValidPhoneNumber(phone)) {
-      alert(
-        "Please enter a valid phone number for the selected country."
-      );
+      alert("Please enter a valid phone number.");
       return;
     }
 
     if (cart.length === 0) {
       alert("Your cart is empty!");
+      return;
+    }
+
+    if (paymentMethod === "BANK_TRANSFER" && !bankSlip) {
+      alert("Please upload your bank payment slip.");
       return;
     }
 
@@ -76,7 +73,9 @@ const Checkout: React.FC = () => {
     }
 
     try {
-      const response = await fetch(
+      setPlacingOrder(true);
+
+      const orderResponse = await fetch(
         "http://localhost:5000/api/orders",
         {
           method: "POST",
@@ -96,21 +95,78 @@ const Checkout: React.FC = () => {
         }
       );
 
-      const result = await response.json();
+      const orderResult = await orderResponse.json();
 
-      if (!response.ok) {
+      if (!orderResponse.ok) {
         throw new Error(
-          result.message || "Order placement failed"
+          orderResult.message || "Order placement failed"
         );
       }
 
-      alert("Your order has been placed successfully! 💗");
+      const orderId = orderResult.data?._id;
+
+      if (!orderId) {
+        throw new Error("Order created, but Order ID was not returned.");
+      }
+
+      const paymentResponse = await fetch(
+        "http://localhost:5000/api/payments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            orderId,
+            paymentMethod,
+          }),
+        }
+      );
+
+      const paymentResult = await paymentResponse.json();
+
+      if (!paymentResponse.ok) {
+        throw new Error(
+          paymentResult.message || "Payment creation failed"
+        );
+      }
+
+      if (paymentMethod === "BANK_TRANSFER" && bankSlip) {
+        const formData = new FormData();
+        formData.append("bankSlip", bankSlip);
+
+        const slipResponse = await fetch(
+          `http://localhost:5000/api/payments/${paymentResult.data._id}/upload-slip`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
+
+        const slipResult = await slipResponse.json();
+
+        if (!slipResponse.ok) {
+          throw new Error(
+            slipResult.message || "Bank slip upload failed"
+          );
+        }
+      }
 
       if (isBuyNow) {
         localStorage.removeItem("tootieBuyNow");
       } else {
         localStorage.removeItem("tootieCart");
       }
+
+      alert(
+        paymentMethod === "BANK_TRANSFER"
+          ? "Order placed! Your bank slip has been submitted for verification. 💗"
+          : "Your order has been placed successfully! 💗"
+      );
 
       navigate("/order-success");
     } catch (error) {
@@ -120,6 +176,8 @@ const Checkout: React.FC = () => {
           : "Something went wrong";
 
       alert(message);
+    } finally {
+      setPlacingOrder(false);
     }
   };
 
@@ -127,8 +185,7 @@ const Checkout: React.FC = () => {
     return (
       <div>
         <h2>Your cart is empty!</h2>
-
-        <button onClick={() => navigate("/product")}>
+        <button type="button" onClick={() => navigate("/products")}>
           Explore Toys
         </button>
       </div>
@@ -151,19 +208,15 @@ const Checkout: React.FC = () => {
         <h2>Delivery Details</h2>
 
         <label>Customer Name</label>
-
         <input
           type="text"
           value={customerName}
-          onChange={(e) =>
-            setCustomerName(e.target.value)
-          }
+          onChange={(e) => setCustomerName(e.target.value)}
           required
           placeholder="Enter your name"
         />
 
         <label>Phone Number</label>
-
         <PhoneInput
           international
           defaultCountry="LK"
@@ -174,7 +227,6 @@ const Checkout: React.FC = () => {
         />
 
         <label>Delivery Address</label>
-
         <textarea
           value={address}
           onChange={(e) => setAddress(e.target.value)}
@@ -191,18 +243,75 @@ const Checkout: React.FC = () => {
             </p>
 
             <p>
-              Rs.{" "}
-              {(item.price * item.quantity).toLocaleString()}
+              Rs. {(item.price * item.quantity).toLocaleString()}
             </p>
           </div>
         ))}
 
-        <h3>
-          Total: Rs. {totalPrice.toLocaleString()}
-        </h3>
+        <h3>Total: Rs. {totalPrice.toLocaleString()}</h3>
 
-        <button type="submit">
-          Place Order →
+        <h2>Payment Method</h2>
+
+        <div className="checkout-payment-options">
+          <label className="checkout-payment-option">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="CASH_ON_DELIVERY"
+              checked={paymentMethod === "CASH_ON_DELIVERY"}
+              onChange={() => {
+                setPaymentMethod("CASH_ON_DELIVERY");
+                setBankSlip(null);
+              }}
+            />
+            <span>💵 Cash on Delivery</span>
+          </label>
+
+          <label className="checkout-payment-option">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="BANK_TRANSFER"
+              checked={paymentMethod === "BANK_TRANSFER"}
+              onChange={() => setPaymentMethod("BANK_TRANSFER")}
+            />
+            <span>🏦 Bank Transfer</span>
+          </label>
+        </div>
+
+        {paymentMethod === "BANK_TRANSFER" && (
+          <div className="checkout-bank-section">
+            <h3>🏦 Bank Transfer</h3>
+
+            <p>
+              Please transfer the order amount to the bank account
+              provided by TootieToys.
+            </p>
+
+            <p>
+              After completing the transfer, upload your payment
+              receipt below.
+            </p>
+
+            <label>Upload Bank Payment Slip</label>
+
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) =>
+                setBankSlip(e.target.files?.[0] || null)
+              }
+              required
+            />
+
+            {bankSlip && (
+              <small>Selected file: {bankSlip.name}</small>
+            )}
+          </div>
+        )}
+
+        <button type="submit" disabled={placingOrder}>
+          {placingOrder ? "Processing..." : "Place Order →"}
         </button>
       </form>
     </div>

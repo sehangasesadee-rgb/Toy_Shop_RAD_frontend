@@ -170,9 +170,14 @@ const AdminOrders = () => {
           <button type="button"onClick={() => navigate("/admin/seasons")}>
             🎉 Season Management →
           </button>
+          <button type="button"onClick={() => navigate("/admin/returns")}>
+            ↩️ Manage Returns →
+          </button>
+          <button type="button"onClick={() => navigate("/admin/payments")}>
+            💳 Manage Payments →
+          </button>
         </div>
-
-    
+  
 
         <div className="admin-orders-summary">
 

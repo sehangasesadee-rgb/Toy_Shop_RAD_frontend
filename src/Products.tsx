@@ -78,7 +78,7 @@ useEffect(() => {
   };
 
   return (
-  <div className="products-page">
+  <div className="products-page" id="products">
 
     <button
       className="back-button"
